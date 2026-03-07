@@ -4,13 +4,13 @@ import { Column, Entity } from "typeorm";
 
 @Entity({name: "auth"})
 export class Auth extends BaseEntity{
-    @Column()
+    @Column({nullable: true})
     username: string;
 
     @Column()
     email: string;
 
-    @Column()
+    @Column({nullable: true})
     password: string;
 
     @Column({default: 0})
@@ -21,6 +21,22 @@ export class Auth extends BaseEntity{
     
     @Column({default: UserRole.USER})
     role: UserRole;
+
+     //extra info
+    @Column({nullable: true})
+    firstname?: string;
+
+    @Column({nullable: true})
+    lastname?: string;
+
+    @Column({nullable: true})
+    profilePicture?: string;
+
+    @Column({nullable: true})
+    accessToken?: string;
+
+    @Column({nullable: true})
+    bio?: string;
 
     //relations
 

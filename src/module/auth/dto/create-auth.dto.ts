@@ -2,7 +2,7 @@ import { ApiProperty } from "@nestjs/swagger";
 import { IsEmail, IsString, Length } from "class-validator";
 
 export class CreateAuthDto {
-    @ApiProperty({default: "qodirjon"})
+    @ApiProperty({default: "Qodirjon"})
     @IsString({message: "string bo'lishi kerak"})
     @Length(3,50)
     username: string;

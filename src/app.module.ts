@@ -1,11 +1,29 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { CompaniesModule } from './companies/companies.module';
+import { ConfigModule } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { Auth } from './module/auth/entities/auth.entity';
+import { AuthModule } from './module/auth/auth.module';
+import { City } from './module/cities/entities/city.entity';
+import { CitiesModule } from './module/cities/cities.module';
 
 @Module({
-  imports: [CompaniesModule],
-  controllers: [AppController],
-  providers: [AppService],
+  imports: [
+    ConfigModule.forRoot({envFilePath: ".env", isGlobal: true}),
+    TypeOrmModule.forRoot({
+      type: "postgres",
+      username: "postgres",
+      port: 5432,
+      host: "localhost",
+      password: String(process.env.DB_PASSWORD),
+      database: String(process.env.DB_NAME),
+      entities: [Auth, City],
+      synchronize: true,
+      logging: false
+    }),
+    AuthModule,
+    CitiesModule
+  ],
+  controllers: [],
+  providers: [],
 })
 export class AppModule {}
