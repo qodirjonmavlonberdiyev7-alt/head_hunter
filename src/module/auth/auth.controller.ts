@@ -18,6 +18,18 @@ export class AuthController {
   googleRedirect(@Request() req: any) {
     return this.authService.googleLogin(req.user)
   }
+
+  //github
+  @Get("github")
+  @UseGuards(AuthGuard("github"))
+  authGithub() {}
+
+  @Get("github/callback")
+  @UseGuards(AuthGuard("github"))
+  githubRedirect(@Request() req: any) {
+    return this.authService.googleLogin(req.user)
+  }
+  
   @ApiBody({type: CreateAuthDto})
   @HttpCode(200)
   @Post("register")

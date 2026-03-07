@@ -1,20 +1,26 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, HttpCode } from '@nestjs/common';
 import { SkillsService } from './skills.service';
 import { CreateSkillDto } from './dto/create-skill.dto';
 import { UpdateSkillDto } from './dto/update-skill.dto';
+import { CreateCityDto } from '../cities/dto/create-city.dto';
+import { ApiBody, ApiInternalServerErrorResponse } from '@nestjs/swagger';
 
 @Controller('skills')
+@ApiInternalServerErrorResponse({description: "Internal server error"})
 export class SkillsController {
   constructor(private readonly skillsService: SkillsService) {}
 
-  @Post()
+  @ApiBody({type: CreateSkillDto})
+  @HttpCode(200)
+  @Post('add_skill')
   create(@Body() createSkillDto: CreateSkillDto) {
     return this.skillsService.create(createSkillDto);
   }
 
-  @Get()
+  @HttpCode(200)
+  @Get('find_all_skills')
   findAll() {
-    return this.skillsService.findAll();
+    return this.skillsService.findAllSkills();
   }
 
   @Get(':id')
