@@ -7,6 +7,10 @@ import { City } from './module/cities/entities/city.entity';
 import { CitiesModule } from './module/cities/cities.module';
 import { SkillsModule } from './module/skills/skills.module';
 import { Skill } from './module/skills/entities/skill.entity';
+import { Company } from './module/companies/entities/company.entity';
+import { CompaniesModule } from './module/companies/companies.module';
+import { JobsModule } from './module/jobs/jobs.module';
+import { Job } from './module/jobs/entities/job.entity';
 
 @Module({
   imports: [
@@ -18,13 +22,15 @@ import { Skill } from './module/skills/entities/skill.entity';
       host: "localhost",
       password: String(process.env.DB_PASSWORD),
       database: String(process.env.DB_NAME),
-      entities: [Auth, City, Skill],
+      entities: [Auth, City, Skill, Company, Job],
       synchronize: true,
       logging: false
     }),
     AuthModule,
     CitiesModule,
-    SkillsModule
+    SkillsModule,
+    CompaniesModule,
+    JobsModule
   ],
   controllers: [],
   providers: [],

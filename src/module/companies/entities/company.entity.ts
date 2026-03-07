@@ -12,4 +12,7 @@ export class Company extends BaseEntity {
 
   @Column({ nullable: true })
   website: string;
+
+  @Column({nullable: true})
+  phoneNumber: string;
 }
