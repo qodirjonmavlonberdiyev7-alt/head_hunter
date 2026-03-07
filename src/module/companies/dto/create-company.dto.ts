@@ -1,9 +1,12 @@
-// create-company.dto.ts
-import { IsString, IsOptional, IsUrl } from 'class-validator';
+import { ApiProperty } from "@nestjs/swagger";
+import { IsEnum, IsOptional, IsString, IsUrl } from "class-validator";
+import { EnumCompanies } from "src/shared/constants/companies";
 
 export class CreateCompanyDto {
+  @ApiProperty({ enum: EnumCompanies })
   @IsString()
-  name: string;
+  @IsEnum(EnumCompanies)
+  name: EnumCompanies;
 
   @IsOptional()
   @IsString()

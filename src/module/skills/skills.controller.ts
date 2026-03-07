@@ -23,17 +23,17 @@ export class SkillsController {
     return this.skillsService.findAllSkills();
   }
 
-  @Get(':id')
+  @Get('get_one_skill/:id')
   findOne(@Param('id') id: string) {
     return this.skillsService.findOne(+id);
   }
 
-  @Patch(':id')
+  @Patch('update_skill/:id')
   update(@Param('id') id: string, @Body() updateSkillDto: UpdateSkillDto) {
     return this.skillsService.update(+id, updateSkillDto);
   }
 
-  @Delete(':id')
+  @Delete('delete_skill/:id')
   remove(@Param('id') id: string) {
     return this.skillsService.remove(+id);
   }
