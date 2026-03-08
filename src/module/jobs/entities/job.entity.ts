@@ -1,10 +1,12 @@
-import { Entity, Column, ManyToOne, ManyToMany, JoinTable } from "typeorm";
+import { Entity, Column, ManyToOne, ManyToMany, JoinTable, OneToMany } from "typeorm";
 import { EnumEmploymentType } from "src/shared/constants/job-types";
 import { BaseEntity } from "src/database/base.entity";
 import { EnumJobLevel } from "src/shared/constants/job-level";
 import { City } from "src/module/cities/entities/city.entity";
 import { Company } from "src/module/companies/entities/company.entity";
 import { Skill } from "src/module/skills/entities/skill.entity";
+import { Application } from "src/module/application/entities/application.entity";
+import { LikedJob } from "src/module/liked-job/entities/liked-job.entity";
 
 @Entity("jobs")
 export class Job extends BaseEntity {
@@ -45,4 +47,10 @@ export class Job extends BaseEntity {
   @ManyToMany(() => Skill)
   @JoinTable({ name: "job_skills" }) // Oraliq jadval nomi
   skills: Skill[];
+
+  @OneToMany(() => Application, (application) => application.job)
+  applications: Application[];
+
+  @OneToMany(() => LikedJob, (likedJob) => likedJob.job)
+  likedBy: LikedJob[];
 }

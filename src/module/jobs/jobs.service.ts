@@ -23,35 +23,45 @@ export class JobsService {
     @InjectRepository(Skill) private skillRepo: Repository<Skill>,
   ) {}
 
-  async create(createJobDto: CreateJobDto): Promise<{ message: string }> {
-    try {
-      const { cityId, companyId, skillIds, ...jobData } = createJobDto;
+  // src/module/jobs/jobs.service.ts - create metodini o'zgartiring
 
-      // 1. Shahar va Kompaniyani tekshirish
-      const city = await this.cityRepo.findOneBy({ id: cityId });
-      if (!city) throw new NotFoundException("Shahar topilmadi");
+async create(createJobDto: CreateJobDto): Promise<{ message: string }> {
+  try {
+    const { cityName, companyName, skillNames, ...jobData } = createJobDto;
 
-      const company = await this.companyRepo.findOneBy({ id: companyId });
-      if (!company) throw new NotFoundException("Kompaniya topilmadi");
+    // 1. Shaharni nomi bo'yicha topish
+    const city = await this.cityRepo.findOne({ where: { name: cityName } });
+    if (!city) throw new NotFoundException(`Shahar topilmadi: ${cityName}`);
 
-      // 2. Skillarni topish
-      const skills = await this.skillRepo.findBy({ id: In(skillIds) });
+    // 2. Kompaniyani nomi bo'yicha topish
+    const company = await this.companyRepo.findOne({ where: { name: companyName } });
+    if (!company) throw new NotFoundException(`Kompaniya topilmadi: ${companyName}`);
 
-      // 3. Job yaratish va bog'lash
-      const job = this.jobRepo.create({
-        ...jobData,
-        city,
-        company,
-        skills,
-      });
-
-      await this.jobRepo.save(job);
-      return { message: "Vakansiya muvaffaqiyatli yaratildi" };
-    } catch (error) {
-      if (error instanceof NotFoundException) throw error;
-      throw new InternalServerErrorException(error.message);
+    // 3. Skillarni nomlari bo'yicha topish
+    const skills = await this.skillRepo.find({ where: skillNames.map(name => ({ name })) });
+    
+    // Barcha skillar topilganligini tekshirish
+    if (skills.length !== skillNames.length) {
+      const foundSkillNames = skills.map(s => s.name);
+      const missingSkills = skillNames.filter(name => !foundSkillNames.includes(name));
+      throw new NotFoundException(`Quyidagi skillar topilmadi: ${missingSkills.join(', ')}`);
     }
+
+    // 4. Job yaratish va bog'lash
+    const job = this.jobRepo.create({
+      ...jobData,
+      city,
+      company,
+      skills,
+    });
+
+    await this.jobRepo.save(job);
+    return { message: "Vakansiya muvaffaqiyatli yaratildi" };
+  } catch (error) {
+    if (error instanceof NotFoundException) throw error;
+    throw new InternalServerErrorException(error.message);
   }
+}
 
  async findAll(paginationDto: PaginationDto, filters: any): Promise<any> {
   try {
@@ -112,21 +122,52 @@ export class JobsService {
     }
   }
 
-  async update(id: number, updateJobDto: UpdateJobDto) {
-    try {
-      const job = await this.findOne(id); // Mavjudligini tekshirish uchun findOne ni chaqiramiz
+  // src/module/jobs/jobs.service.ts - update metodini qo'shimcha qilish
 
-      await this.jobRepo.update(id, updateJobDto);
-      return { message: "Job updated successfully" };
-    } catch (error) {
-      if (
-        error instanceof NotFoundException ||
-        error instanceof BadRequestException
-      )
-        throw error;
-      throw new InternalServerErrorException(error.message);
+async update(id: number, updateJobDto: UpdateJobDto) {
+  try {
+    const job = await this.findOne(id);
+    
+    const updateData: any = { ...updateJobDto };
+    
+    // Agar cityName berilgan bo'lsa, city ni yangilash
+    if (updateJobDto.cityName) {
+      const city = await this.cityRepo.findOne({ where: { name: updateJobDto.cityName } });
+      if (!city) throw new NotFoundException(`Shahar topilmadi: ${updateJobDto.cityName}`);
+      updateData.city = city;
+      delete updateData.cityName;
     }
+    
+    // Agar companyName berilgan bo'lsa, company ni yangilash
+    if (updateJobDto.companyName) {
+      const company = await this.companyRepo.findOne({ where: { name: updateJobDto.companyName } });
+      if (!company) throw new NotFoundException(`Kompaniya topilmadi: ${updateJobDto.companyName}`);
+      updateData.company = company;
+      delete updateData.companyName;
+    }
+    
+    // Agar skillNames berilgan bo'lsa, skills ni yangilash
+    if (updateJobDto.skillNames) {
+      const skills = await this.skillRepo.find({ where: updateJobDto.skillNames.map(name => ({ name })) });
+      if (skills.length !== updateJobDto.skillNames.length) {
+        const foundSkillNames = skills.map(s => s.name);
+        const missingSkills = updateJobDto.skillNames.filter(name => !foundSkillNames.includes(name));
+        throw new NotFoundException(`Quyidagi skillar topilmadi: ${missingSkills.join(', ')}`);
+      }
+      updateData.skills = skills;
+      delete updateData.skillNames;
+    }
+    
+    // Qolgan ma'lumotlarni yangilash
+    await this.jobRepo.save({ ...job, ...updateData });
+    
+    return { message: "Job updated successfully" };
+  } catch (error) {
+    if (error instanceof NotFoundException || error instanceof BadRequestException)
+      throw error;
+    throw new InternalServerErrorException(error.message);
   }
+}
 
   async remove(id: number): Promise<{ message: string }> {
     try {

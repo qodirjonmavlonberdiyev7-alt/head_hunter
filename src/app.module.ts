@@ -11,6 +11,10 @@ import { Company } from './module/companies/entities/company.entity';
 import { CompaniesModule } from './module/companies/companies.module';
 import { JobsModule } from './module/jobs/jobs.module';
 import { Job } from './module/jobs/entities/job.entity';
+import { ApplicationModule } from './module/application/application.module';
+import { Application } from './module/application/entities/application.entity';
+import { LikedJobsModule } from './module/liked-job/liked-job.module';
+import { LikedJob } from './module/liked-job/entities/liked-job.entity';
 
 @Module({
   imports: [
@@ -22,7 +26,7 @@ import { Job } from './module/jobs/entities/job.entity';
       host: "localhost",
       password: String(process.env.DB_PASSWORD),
       database: String(process.env.DB_NAME),
-      entities: [Auth, City, Skill, Company, Job],
+      entities: [Auth, City, Skill, Company, Job, Application, LikedJob],
       synchronize: true,
       logging: false
     }),
@@ -30,7 +34,9 @@ import { Job } from './module/jobs/entities/job.entity';
     CitiesModule,
     SkillsModule,
     CompaniesModule,
-    JobsModule
+    JobsModule,
+    ApplicationModule,
+    LikedJobsModule  
   ],
   controllers: [],
   providers: [],

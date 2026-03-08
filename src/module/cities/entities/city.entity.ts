@@ -5,14 +5,18 @@ import { Column, Entity, OneToMany } from "typeorm";
 
 @Entity({name: 'city'})
 export class City extends BaseEntity{
-    @Column({default: EnumCity.Tashkent})
+    @Column({ 
+        type: 'enum', 
+        enum: EnumCity,
+        unique: true // Shahar nomi unikal bo'lishi kerak
+    })
     name: EnumCity;
 
-    @Column({default: "Tashkent"})
+    @Column()
     region: string;
 
     //relations
 
     @OneToMany(() => Job, (job) => job.city)
-    jobs: Job[];
+    jobs: Job[]; 
 }

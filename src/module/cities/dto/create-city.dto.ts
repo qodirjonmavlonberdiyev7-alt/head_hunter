@@ -10,7 +10,7 @@ export class CreateCityDto {
     @IsEnum(EnumCity, {message: "Shahar nomi EnumCity ichidagi qiymatlardan biri bo'lishi kerak"})
     name: EnumCity;
 
-    @ApiProperty({default: "Tashkent"})
+    @ApiProperty({example: "Tashkent", description: "Viloyat nomi"})
     @IsString({message: "Region matn ko'rinishida bo'lishi kerak"})
     @IsNotEmpty({
         message: "Region bo'sh bo'lishi mumkin emas"

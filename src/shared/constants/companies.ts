@@ -1,7 +1,7 @@
 export enum EnumCompanies {
   GOOGLE = 'Google',
   AMAZON = 'Amazon',
-  EPAM = 'EPAM',
+  EPAM = 'Epam',
   PAYME = 'Payme',
   CLICK = 'Click'
 }

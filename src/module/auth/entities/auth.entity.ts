@@ -1,43 +1,50 @@
 import { BaseEntity } from "src/database/base.entity";
+import { Application } from "src/module/application/entities/application.entity";
+import { LikedJob } from "src/module/liked-job/entities/liked-job.entity";
 import { UserRole } from "src/shared/constants/user.role";
-import { Column, Entity } from "typeorm";
+import { Column, Entity, OneToMany } from "typeorm";
 
-@Entity({name: "auth"})
-export class Auth extends BaseEntity{
-    @Column({nullable: true})
-    username: string;
+@Entity({ name: "auth" })
+export class Auth extends BaseEntity {
+  @Column({ nullable: true })
+  username: string;
 
-    @Column()
-    email: string;
+  @Column()
+  email: string;
 
-    @Column({nullable: true})
-    password: string;
+  @Column({ nullable: true })
+  password: string;
 
-    @Column({default: 0})
-    otp: string;
+  @Column({ default: 0 })
+  otp: string;
 
-    @Column({type: "bigint"})
-    otpTime: number;
-    
-    @Column({default: UserRole.USER})
-    role: UserRole;
+  @Column({ type: "bigint" })
+  otpTime: number;
 
-     //extra info
-    @Column({nullable: true})
-    firstname?: string;
+  @Column({ default: UserRole.USER })
+  role: UserRole;
 
-    @Column({nullable: true})
-    lastname?: string;
+  //extra info
+  @Column({ nullable: true })
+  firstname?: string;
 
-    @Column({nullable: true})
-    profilePicture?: string;
+  @Column({ nullable: true })
+  lastname?: string;
 
-    @Column({nullable: true})
-    accessToken?: string;
+  @Column({ nullable: true })
+  profilePicture?: string;
 
-    @Column({nullable: true})
-    bio?: string;
+  @Column({ nullable: true })
+  accessToken?: string;
 
-    //relations
+  @Column({ nullable: true })
+  bio?: string;
 
+  //relations
+
+  @OneToMany(() => Application, (application) => application.user)
+  applications: Application[];
+
+  @OneToMany(() => LikedJob, (likedJob) => likedJob.user)
+  likedJobs: LikedJob[];
 }
