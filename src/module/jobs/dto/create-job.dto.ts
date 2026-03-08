@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsNumber, IsEnum, Min, IsNotEmpty, Length, Max } from 'class-validator';
+import { IsString, IsOptional, IsNumber, IsEnum, Min, IsNotEmpty, Length, Max, IsArray } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { EnumEmploymentType } from 'src/shared/constants/job-types';
 import { EnumJobLevel } from 'src/shared/constants/job-level';
@@ -42,4 +42,20 @@ export class CreateJobDto {
     message: "Employment type EnumEmploymentType ichidagi qiymatlardan biri bo'lishi kerak"
   })
   employmentType: EnumEmploymentType;
+
+  // RELATIONLAR UCHUN IDLAR
+  @ApiProperty({ example: 1 })
+  @IsNumber()
+  @IsNotEmpty()
+  cityId: number;
+
+  @ApiProperty({ example: 1 })
+  @IsNumber()
+  @IsNotEmpty()
+  companyId: number;
+
+  @ApiProperty({ example: [1, 2, 3] })
+  @IsArray()
+  @IsNumber({}, { each: true })
+  skillIds: number[];
 }

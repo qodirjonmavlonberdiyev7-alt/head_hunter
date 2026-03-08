@@ -1,6 +1,7 @@
 import { BaseEntity } from "src/database/base.entity";
+import { Job } from "src/module/jobs/entities/job.entity";
 import { EnumCompanies } from "src/shared/constants/companies";
-import { Column, Entity } from "typeorm";
+import { Column, Entity, OneToMany } from "typeorm";
 
 @Entity()
 export class Company extends BaseEntity {
@@ -15,4 +16,9 @@ export class Company extends BaseEntity {
 
   @Column({nullable: true})
   phoneNumber: string;
+
+  //relations
+
+  @OneToMany(() => Job, (job) => job.company)
+    jobs: Job[];
 }

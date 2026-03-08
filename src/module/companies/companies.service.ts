@@ -1,15 +1,9 @@
-import {
-  BadRequestException,
-  Injectable,
-  InternalServerErrorException,
-  NotFoundException,
-} from "@nestjs/common";
+import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
 import { Company } from "./entities/company.entity";
+import { Repository } from "typeorm";
 import { CreateCompanyDto } from "./dto/create-company.dto";
 import { UpdateCompanyDto } from "./dto/update-company.dto";
-import { EnumCompanies } from "src/shared/constants/companies";
 
 @Injectable()
 export class CompaniesService {
@@ -19,32 +13,18 @@ export class CompaniesService {
 
   async create(createCompanyDto: CreateCompanyDto): Promise<{ message: string }> {
     try {
-      const { name, description, website, phoneNumber } = createCompanyDto;
-
-      const enumCompanyName = EnumCompanies[name as keyof typeof EnumCompanies] || name;
-      
-      // Agar enumda bo'lmasa xatolik qaytarish (IsEnum validatoridan o'tsa ham, qo'shimcha xavfsizlik)
-      if (!Object.values(EnumCompanies).includes(enumCompanyName as EnumCompanies)) {
-        throw new BadRequestException("Invalid company name");
-      }
-
+      // DTO da @IsEnum borligi uchun enum tekshiruvi bu yerda shart emas
       const foundedCompany = await this.companyRepo.findOne({
-        where: { name: enumCompanyName as EnumCompanies },
+        where: { name: createCompanyDto.name },
       });
 
       if (foundedCompany)
-        throw new BadRequestException("This company already exists");
+        throw new BadRequestException("Bunday kompaniya allaqachon mavjud");
 
-      const company = this.companyRepo.create({
-        name: enumCompanyName as EnumCompanies,
-        description,
-        website,
-        phoneNumber
-      });
-
+      const company = this.companyRepo.create(createCompanyDto);
       await this.companyRepo.save(company);
 
-      return { message: "Company added" };
+      return { message: "Kompaniya muvaffaqiyatli qo'shildi" };
     } catch (error) {
       if (error instanceof BadRequestException) throw error;
       throw new InternalServerErrorException(error.message);
@@ -54,8 +34,7 @@ export class CompaniesService {
   async findAll(): Promise<Company[]> {
     try {
       const companies = await this.companyRepo.find();
-      if (companies.length === 0)
-        throw new NotFoundException("No companies found");
+      if (companies.length === 0) throw new NotFoundException("Kompaniyalar topilmadi");
       return companies;
     } catch (error) {
       if (error instanceof NotFoundException) throw error;
@@ -66,8 +45,7 @@ export class CompaniesService {
   async findOne(id: number): Promise<Company> {
     try {
       const company = await this.companyRepo.findOne({ where: { id } });
-      if (!company) throw new NotFoundException("Company not found");
-
+      if (!company) throw new NotFoundException("Kompaniya topilmadi");
       return company;
     } catch (error) {
       if (error instanceof NotFoundException) throw error;
@@ -77,38 +55,42 @@ export class CompaniesService {
 
   async update(id: number, updateCompanyDto: UpdateCompanyDto) {
     try {
-      const company = await this.companyRepo.findOne({ where: { id } });
-      if (!company) throw new NotFoundException("Company not found");
+      // Mavjudligini findOne orqali tekshiramiz
+      await this.findOne(id);
 
-      let enumCompanyName: EnumCompanies | undefined = undefined;
-      if (updateCompanyDto.name) {
-        enumCompanyName = EnumCompanies[updateCompanyDto.name as keyof typeof EnumCompanies] || updateCompanyDto.name;
-        if (!Object.values(EnumCompanies).includes(enumCompanyName as EnumCompanies)) {
-          throw new BadRequestException("Invalid company name");
-        }
-      }
-
-      await this.companyRepo.update(id, {
-        ...updateCompanyDto,
-        name: enumCompanyName,
-      });
-      return { message: "Company updated" };
+      await this.companyRepo.update(id, updateCompanyDto);
+      return { message: "Kompaniya muvaffaqiyatli yangilandi" };
     } catch (error) {
-      if (error instanceof (BadRequestException || NotFoundException)) throw error;
+      // BU YERNI TUZATDIK:
+      if (error instanceof BadRequestException || error instanceof NotFoundException) {
+        throw error;
+      }
       throw new InternalServerErrorException(error.message);
     }
   }
 
   async remove(id: number): Promise<{ message: string }> {
     try {
-      const company = await this.companyRepo.findOne({ where: { id } });
-      if (!company) throw new NotFoundException("Company not found");
-      
+      await this.findOne(id);
       await this.companyRepo.delete(id);
-      return { message: "Deleted company" };
+      return { message: "Kompaniya o'chirildi" };
     } catch (error) {
       if (error instanceof NotFoundException) throw error;
       throw new InternalServerErrorException(error.message);
     }
   }
+
+  async findCompanyWithJobs(id: number): Promise<Company> {
+  try {
+    const company = await this.companyRepo.findOne({ 
+      where: { id },
+      relations: ['jobs', 'jobs.city', 'jobs.skills'] // Kompaniya ishlarini va ularning city/skills larini yuklash
+    });
+    if (!company) throw new NotFoundException("Kompaniya topilmadi");
+    return company;
+  } catch (error) {
+    if (error instanceof NotFoundException) throw error;
+    throw new InternalServerErrorException(error.message);
+  }
+}
 }

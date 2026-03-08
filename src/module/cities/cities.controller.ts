@@ -13,7 +13,7 @@ import {
 import { CitiesService } from "./cities.service";
 import { CreateCityDto } from "./dto/create-city.dto";
 import { UpdateCityDto } from "./dto/update-city.dto";
-import { ApiBearerAuth, ApiBody, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import { ApiBearerAuth, ApiBody, ApiInternalServerErrorResponse, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { AuthGuard } from "src/common/guard/auth.guard";
 import { RolesGuard } from "src/common/guard/roles.guard";
 import { Roles } from "src/common/decorators/roles.decorator";
@@ -22,6 +22,7 @@ import { UserRole } from "src/shared/constants/user.role";
 @ApiTags("Cities") // Swagger'da alohida bo'lim qiladi
 @ApiBearerAuth("JWT-auth") // Swagger'da tokenni kiritish tugmasini chiqaradi
 @Controller("cities")
+@ApiInternalServerErrorResponse({description: "Internal server error"})
 export class CitiesController {
   constructor(private readonly citiesService: CitiesService) {}
 
@@ -29,7 +30,7 @@ export class CitiesController {
   @Roles(UserRole.ADMIN, UserRole.SUPERADMIN)
   @UseGuards(AuthGuard, RolesGuard)
   @HttpCode(201)
-  @ApiOperation({ summary: 'Yangi shahar qoʻshish (Faqat Admin)' })
+  @ApiOperation({ summary: 'Yangi shahar qoʻshish (Faqat Admin, Superadmin)' })
   @ApiResponse({ status: 201, description: 'Shahar muvaffaqiyatli qoʻshildi.' })
   @ApiResponse({ status: 400, description: 'Bunday shahar allaqachon mavjud.' })
   @ApiResponse({ status: 401, description: 'Token xato yoki mavjud emas.' })
@@ -64,7 +65,7 @@ export class CitiesController {
   @Roles(UserRole.ADMIN, UserRole.SUPERADMIN)
   @UseGuards(AuthGuard, RolesGuard)
   @HttpCode(200)
-  @ApiOperation({ summary: 'Shahar maʻlumotlarini yangilash' })
+  @ApiOperation({ summary: 'Shahar maʻlumotlarini yangilash (Faqat Admin, Superadmin)' })
   @ApiResponse({ status: 200, description: 'Shahar muvaffaqiyatli yangilandi.' })
   @ApiResponse({ status: 404, description: 'Shahar topilmadi.' })
   @ApiBody({type: UpdateCityDto})
@@ -76,10 +77,29 @@ export class CitiesController {
   @Roles(UserRole.ADMIN, UserRole.SUPERADMIN)
   @UseGuards(AuthGuard, RolesGuard)
   @HttpCode(200)
-  @ApiOperation({ summary: 'Shaharni oʻchirish' })
+  @ApiOperation({ summary: 'Shaharni oʻchirish (Faqat Admin, Superadmin)' })
   @ApiResponse({ status: 200, description: 'Shahar muvaffaqiyatli oʻchirildi.' })
   @ApiResponse({ status: 404, description: 'Shahar topilmadi.' })
   remove(@Param("id", ParseIntPipe) id: number) {
     return this.citiesService.remove(id);
   }
+
+@Get("get_city_with_jobs/:id")
+@Roles(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.USER)
+@UseGuards(AuthGuard, RolesGuard)
+@HttpCode(200)
+@ApiOperation({ summary: 'Shahar va undagi barcha ish o\'rinlarini olish' })
+findCityWithJobs(@Param("id", ParseIntPipe) id: number) {
+  return this.citiesService.findCityWithJobs(id);
+}
+
+@Get("get_city_companies/:id")
+@Roles(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.USER)
+@UseGuards(AuthGuard, RolesGuard)
+@HttpCode(200)
+@ApiOperation({ summary: 'Shahardagi kompaniyalar va ularning ish o\'rinlarini olish' })
+findCityCompaniesWithJobs(@Param("id", ParseIntPipe) id: number) {
+  return this.citiesService.findCityCompaniesWithJobs(id);
+}
+
 }
