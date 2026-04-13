@@ -1,9 +1,9 @@
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
-import { ValidationPipe } from '@nestjs/common';
-import { AllExceptionsFilter } from './common/filter/all-exception.filter';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import * as express from "express"
+import { NestFactory } from "@nestjs/core";
+import { AppModule } from "./app.module";
+import { ValidationPipe } from "@nestjs/common";
+import { AllExceptionsFilter } from "./common/filter/all-exception.filter";
+import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
+import * as express from "express";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -16,40 +16,44 @@ async function bootstrap() {
     }),
   );
 
-  app.useGlobalFilters(new AllExceptionsFilter())
+  app.useGlobalFilters(new AllExceptionsFilter());
 
   //swagger
   const config = new DocumentBuilder()
-  .setTitle('Job Search API (HH Clone)')
-  .setDescription('The Job Search API description')
-  .setVersion('1.0')
-  .addBearerAuth({
-    type: 'http',
-    scheme: 'bearer',
-    bearerFormat: 'JWT',
-    name: 'JWT',
-    description: 'Enter JWT token',
-    in: 'header'
-  },
-  'JWT-auth'
-)
-  .build()
+    .setTitle("Job Search API (HH Clone)")
+    .setDescription("The Job Search API description")
+    .setVersion("1.0")
+    .addBearerAuth(
+      {
+        type: "http",
+        scheme: "bearer",
+        bearerFormat: "JWT",
+        name: "JWT",
+        description: "Enter JWT token",
+        in: "header",
+      },
+      "JWT-auth",
+    )
+    .build();
 
-  const document = SwaggerModule.createDocument(app, config)
+  const document = SwaggerModule.createDocument(app, config);
 
   SwaggerModule.setup("api", app, document, {
     swaggerOptions: {
-      persistAuthorization: true
-    }
-  })
+      persistAuthorization: true,
+    },
+  });
 
-  app.use("/uploads", express.static("uploads"))
+  app.use("/uploads", express.static("uploads"));
 
+  const PORT = process.env.PORT ?? 3000;
 
-  const PORT = process.env.PORT ?? 3000
+  app.enableCors({
+    origin: "http://localhost:3001",
+    credentials: true,
+  });
 
-
-   await app.listen(PORT, () => {
+  await app.listen(PORT, () => {
     console.log("Server is running at : http://localhost:4001");
     console.log("Documantation link : http://localhost:4001/api");
   });
