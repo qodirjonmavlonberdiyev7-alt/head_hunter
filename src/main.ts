@@ -49,9 +49,14 @@ async function bootstrap() {
   const PORT = process.env.PORT ?? 3000;
 
   app.enableCors({
-    origin: "http://localhost:3001",
-    credentials: true,
-  });
+  origin: [
+    'http://localhost:3001',
+    'http://localhost:3000',
+    'https://jobconnect.uz',
+    'https://www.jobconnect.uz',
+  ],
+  credentials: true,
+});
 
   await app.listen(PORT, () => {
     console.log("Server is running at : http://localhost:4001");
