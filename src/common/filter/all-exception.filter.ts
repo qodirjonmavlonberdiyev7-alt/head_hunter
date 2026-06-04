@@ -13,7 +13,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
             statusCode: status,
             message: message || 'Internal server error',
             error: exception.name || 'UnknownError',
-            stack: exception.stack || null,
+            stack: process.env.NODE_ENV === 'development' ? exception.stack : undefined,
             timestamp: new Date().toISOString(),
         });
     }

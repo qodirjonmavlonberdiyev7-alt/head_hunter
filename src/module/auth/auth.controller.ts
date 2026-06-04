@@ -1,9 +1,23 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, HttpCode, UseGuards, Request} from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Delete,
+  HttpCode,
+  UseGuards,
+  Request,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { CreateAuthDto, LoginAuthDto } from './dto/create-auth.dto';
 import { ApiBody } from '@nestjs/swagger';
 import { VerifyAuthDto } from './dto/verify.dto';
 import { AuthGuard } from '@nestjs/passport';
+import { Roles } from 'src/common/decorators/roles.decorator';
+import { UserRole } from 'src/shared/constants/user.role';
+import { AuthGuard as JwtAuthGuard } from 'src/common/guard/auth.guard';
+import { RolesGuard } from 'src/common/guard/roles.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -16,10 +30,9 @@ export class AuthController {
   @Get("google/callback")
   @UseGuards(AuthGuard("google"))
   googleRedirect(@Request() req: any) {
-    return this.authService.googleLogin(req.user)
+    return this.authService.googleLogin(req.user);
   }
 
-  //github
   @Get("github")
   @UseGuards(AuthGuard("github"))
   authGithub() {}
@@ -27,24 +40,24 @@ export class AuthController {
   @Get("github/callback")
   @UseGuards(AuthGuard("github"))
   githubRedirect(@Request() req: any) {
-    return this.authService.googleLogin(req.user)
+    return this.authService.githubLogin(req.user);
   }
-  
-  @ApiBody({type: CreateAuthDto})
+
+  @ApiBody({ type: CreateAuthDto })
   @HttpCode(200)
   @Post("register")
   create(@Body() createAuthDto: CreateAuthDto) {
     return this.authService.register(createAuthDto);
   }
 
-  @ApiBody({type: VerifyAuthDto})
+  @ApiBody({ type: VerifyAuthDto })
   @HttpCode(200)
   @Post("verify")
   verify(@Body() verifyAuthDto: VerifyAuthDto) {
     return this.authService.verify(verifyAuthDto);
   }
 
-  @ApiBody({type: LoginAuthDto})
+  @ApiBody({ type: LoginAuthDto })
   @HttpCode(200)
   @Post("login")
   login(@Body() loginAuthDto: LoginAuthDto) {
@@ -52,6 +65,8 @@ export class AuthController {
   }
 
   @Delete(':id')
+  @Roles(UserRole.SUPERADMIN)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   remove(@Param('id') id: string) {
     return this.authService.remove(+id);
   }

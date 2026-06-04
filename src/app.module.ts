@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { Auth } from './module/auth/entities/auth.entity';
 import { AuthModule } from './module/auth/auth.module';
 import { City } from './module/cities/entities/city.entity';
@@ -18,7 +19,8 @@ import { LikedJob } from './module/liked-job/entities/liked-job.entity';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({envFilePath: ".env", isGlobal: true}),
+    ConfigModule.forRoot({ envFilePath: ".env", isGlobal: true }),
+    ThrottlerModule.forRoot([{ ttl: 60000, limit: 5 }]),
     TypeOrmModule.forRoot({
       type: "postgres",
       username: "postgres",
@@ -27,8 +29,8 @@ import { LikedJob } from './module/liked-job/entities/liked-job.entity';
       password: String(process.env.DB_PASSWORD),
       database: String(process.env.DB_NAME),
       entities: [Auth, City, Skill, Company, Job, Application, LikedJob],
-      synchronize: true,
-      logging: false
+      synchronize: process.env.NODE_ENV !== 'production',
+      logging: false,
     }),
     AuthModule,
     CitiesModule,
@@ -36,7 +38,7 @@ import { LikedJob } from './module/liked-job/entities/liked-job.entity';
     CompaniesModule,
     JobsModule,
     ApplicationModule,
-    LikedJobsModule  
+    LikedJobsModule,
   ],
   controllers: [],
   providers: [],

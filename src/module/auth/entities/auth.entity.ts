@@ -15,7 +15,7 @@ export class Auth extends BaseEntity {
   @Column({ nullable: true })
   password: string;
 
-  @Column({ default: 0 })
+  @Column({ default: '' })
   otp: string;
 
   @Column({ type: "bigint" })

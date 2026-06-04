@@ -12,6 +12,7 @@ import {
   ParseIntPipe,
   Query,
 } from "@nestjs/common";
+import { PaginationDto } from "src/shared/utils/pagination";
 import {
   ApiBearerAuth,
   ApiBody,
@@ -99,10 +100,11 @@ export class ApplicationController {
   @ApiQuery({ name: "status", enum: ApplicationStatus, required: false })
   @ApiQuery({ name: "companyId", required: false })
   getAllApplicationsForAdmin(
+    @Query() paginationDto: PaginationDto,
     @Query("status") status?: ApplicationStatus,
     @Query("companyId") companyId?: number,
   ) {
-    return this.applicationService.findAllForAdmin({ status, companyId });
+    return this.applicationService.findAllForAdmin({ status, companyId }, paginationDto);
   }
 
   @Patch("admin/status/:id")

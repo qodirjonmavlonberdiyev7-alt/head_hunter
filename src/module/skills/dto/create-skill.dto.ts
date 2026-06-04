@@ -1,18 +1,10 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsEnum, IsNotEmpty} from "class-validator";
-import { EnumSkills } from "src/shared/constants/skills";
+import { IsNotEmpty, IsString, Length } from "class-validator";
 
 export class CreateSkillDto {
-  @ApiProperty({
-    example: "NestJS",
-    enum: EnumSkills,
-    description:
-      "Texnologiya yoki ko'nikma nomi (Enum qiymatlaridan biri bo'lishi shart)",
-  })
+  @ApiProperty({ example: "TypeScript", description: "Ko'nikma yoki texnologiya nomi" })
+  @IsString({ message: "Skill nomi matn bo'lishi kerak" })
   @IsNotEmpty({ message: "Skill nomi bo'sh bo'lishi mumkin emas" })
-  @IsEnum(EnumSkills, {
-    message:
-      "Noto'g'ri skill nomi. Faqat belgilangan ro'yxatdagilarni kiriting.",
-  })
-  name: EnumSkills;
+  @Length(1, 50, { message: "Skill nomi 1 dan 50 belgigacha bo'lishi kerak" })
+  name: string;
 }

@@ -9,8 +9,6 @@ import { UpdateSkillDto } from "./dto/update-skill.dto";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Skill } from "./entities/skill.entity";
 import { Repository } from "typeorm";
-import { EnumSkills } from "src/shared/constants/skills";
-
 @Injectable()
 export class SkillsService {
   constructor(

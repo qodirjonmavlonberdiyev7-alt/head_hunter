@@ -30,8 +30,8 @@ export class Job extends BaseEntity {
   })
   employmentType: EnumEmploymentType;
 
-  @Column({ type: "decimal", nullable: true })
-  salary: number;
+  @Column({ type: "varchar", length: 100, nullable: true })
+  salary: string;
 
   @Column({ default: true })
   isActive: boolean;

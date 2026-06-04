@@ -16,7 +16,7 @@ import { GithubStrategy } from './github-strategy';
     JwtModule.register({
       global: true,
       secret: String(process.env.SECRET),
-      signOptions: {expiresIn: '60d'},
+      signOptions: { expiresIn: '1d' },
     }),
     UserModule
   ],

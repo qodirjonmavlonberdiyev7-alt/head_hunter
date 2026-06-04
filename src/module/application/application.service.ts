@@ -1,4 +1,3 @@
-// src/module/application/application.service.ts
 import {
   BadRequestException,
   Injectable,
@@ -13,7 +12,8 @@ import { UpdateApplicationDto } from "./dto/update-application.dto";
 import { Auth } from "../auth/entities/auth.entity";
 import { Job } from "../jobs/entities/job.entity";
 import { ApplicationResponseDto } from "./dto/application-response.dto";
-import { ApplicationStatus } from "src/shared/constants/application-status"; // SHARED DAN IMPORT
+import { ApplicationStatus } from "src/shared/constants/application-status";
+import { PaginationDto } from "src/shared/utils/pagination";
 
 @Injectable()
 export class ApplicationService {
@@ -40,17 +40,13 @@ export class ApplicationService {
         where: { id: jobId, isActive: true },
         relations: ["company", "city"],
       });
-      if (!job)
-        throw new NotFoundException("Vakansiya topilmadi yoki aktiv emas");
+      if (!job) throw new NotFoundException("Vakansiya topilmadi yoki aktiv emas");
 
       const existingApplication = await this.applicationRepo.findOne({
         where: { user: { id: userId }, job: { id: jobId } },
       });
-
       if (existingApplication) {
-        throw new BadRequestException(
-          "Siz bu vakansiyaga allaqachon ariza bergansiz",
-        );
+        throw new BadRequestException("Siz bu vakansiyaga allaqachon ariza bergansiz");
       }
 
       const application = this.applicationRepo.create({
@@ -61,21 +57,13 @@ export class ApplicationService {
         status: ApplicationStatus.PENDING,
       });
 
-      await this.applicationRepo.save(application);
-
-      const response = await this.mapToResponseDto(application);
-
+      const saved = await this.applicationRepo.save(application);
       return {
         message: "Ariza muvaffaqiyatli yuborildi",
-        application: response,
+        application: this.mapToResponseDto(saved, job),
       };
     } catch (error) {
-      if (
-        error instanceof NotFoundException ||
-        error instanceof BadRequestException
-      ) {
-        throw error;
-      }
+      if (error instanceof NotFoundException || error instanceof BadRequestException) throw error;
       throw new InternalServerErrorException(error.message);
     }
   }
@@ -87,8 +75,7 @@ export class ApplicationService {
         relations: ["job", "job.company", "job.city", "job.skills"],
         order: { createdAt: "DESC" },
       });
-
-      return Promise.all(applications.map((app) => this.mapToResponseDto(app)));
+      return applications.map((app) => this.mapToResponseDto(app, app.job));
     } catch (error) {
       throw new InternalServerErrorException(error.message);
     }
@@ -100,12 +87,8 @@ export class ApplicationService {
         where: { id, user: { id: userId } },
         relations: ["job", "job.company", "job.city", "job.skills"],
       });
-
-      if (!application) {
-        throw new NotFoundException("Ariza topilmadi");
-      }
-
-      return this.mapToResponseDto(application);
+      if (!application) throw new NotFoundException("Ariza topilmadi");
+      return this.mapToResponseDto(application, application.job);
     } catch (error) {
       if (error instanceof NotFoundException) throw error;
       throw new InternalServerErrorException(error.message);
@@ -117,28 +100,17 @@ export class ApplicationService {
       const application = await this.applicationRepo.findOne({
         where: { id, user: { id: userId } },
       });
-
-      if (!application) {
-        throw new NotFoundException("Ariza topilmadi");
-      }
+      if (!application) throw new NotFoundException("Ariza topilmadi");
 
       if (application.status !== ApplicationStatus.PENDING) {
-        throw new BadRequestException(
-          "Faqat kutilayotgan arizalarni bekor qilish mumkin",
-        );
+        throw new BadRequestException("Faqat kutilayotgan arizalarni bekor qilish mumkin");
       }
 
       application.status = ApplicationStatus.CANCELLED;
       await this.applicationRepo.save(application);
-
       return { message: "Ariza muvaffaqiyatli bekor qilindi" };
     } catch (error) {
-      if (
-        error instanceof NotFoundException ||
-        error instanceof BadRequestException
-      ) {
-        throw error;
-      }
+      if (error instanceof NotFoundException || error instanceof BadRequestException) throw error;
       throw new InternalServerErrorException(error.message);
     }
   }
@@ -153,15 +125,10 @@ export class ApplicationService {
         where: { id, user: { id: userId } },
         relations: ["job", "job.company"],
       });
-
-      if (!application) {
-        throw new NotFoundException("Ariza topilmadi");
-      }
+      if (!application) throw new NotFoundException("Ariza topilmadi");
 
       if (application.status !== ApplicationStatus.PENDING) {
-        throw new BadRequestException(
-          "Faqat kutilayotgan arizalarni tahrirlash mumkin",
-        );
+        throw new BadRequestException("Faqat kutilayotgan arizalarni tahrirlash mumkin");
       }
 
       if (updateApplicationDto.coverLetter !== undefined) {
@@ -172,63 +139,58 @@ export class ApplicationService {
       }
 
       await this.applicationRepo.save(application);
-
       return {
         message: "Ariza muvaffaqiyatli yangilandi",
-        application: await this.mapToResponseDto(application),
+        application: this.mapToResponseDto(application, application.job),
       };
     } catch (error) {
-      if (
-        error instanceof NotFoundException ||
-        error instanceof BadRequestException
-      ) {
-        throw error;
-      }
+      if (error instanceof NotFoundException || error instanceof BadRequestException) throw error;
       throw new InternalServerErrorException(error.message);
     }
   }
 
-  async findAllForAdmin(filters?: any): Promise<any> {
+  async findAllForAdmin(filters?: any, paginationDto?: PaginationDto): Promise<any> {
     try {
+      const page = paginationDto?.page ?? 1;
+      const limit = paginationDto?.limit ?? 20;
+      const skip = (page - 1) * limit;
+
       const queryBuilder = this.applicationRepo
         .createQueryBuilder("app")
         .leftJoinAndSelect("app.user", "user")
         .leftJoinAndSelect("app.job", "job")
         .leftJoinAndSelect("job.company", "company")
-        .orderBy("app.createdAt", "DESC");
+        .orderBy("app.createdAt", "DESC")
+        .skip(skip)
+        .take(limit);
 
       if (filters?.status) {
-        queryBuilder.andWhere("app.status = :status", {
-          status: filters.status,
-        });
+        queryBuilder.andWhere("app.status = :status", { status: filters.status });
       }
-
       if (filters?.companyId) {
-        queryBuilder.andWhere("company.id = :companyId", {
-          companyId: filters.companyId,
-        });
+        queryBuilder.andWhere("company.id = :companyId", { companyId: filters.companyId });
       }
 
-      const applications = await queryBuilder.getMany();
+      const [applications, total] = await queryBuilder.getManyAndCount();
 
-      return applications.map((app) => ({
-        id: app.id,
-        user: {
-          id: app.user.id,
-          email: app.user.email,
-          username: app.user.username,
+      return {
+        data: applications.map((app) => ({
+          id: app.id,
+          user: { id: app.user.id, email: app.user.email, username: app.user.username },
+          job: { id: app.job.id, title: app.job.title, company: app.job.company?.name },
+          status: app.status,
+          coverLetter: app.coverLetter,
+          cvUrl: app.cvUrl,
+          notes: app.notes,
+          createdAt: app.createdAt,
+        })),
+        meta: {
+          totalItems: total,
+          totalPages: Math.ceil(total / limit),
+          currentPage: Number(page),
+          limit: Number(limit),
         },
-        job: {
-          id: app.job.id,
-          title: app.job.title,
-          company: app.job.company?.name,
-        },
-        status: app.status,
-        coverLetter: app.coverLetter,
-        cvUrl: app.cvUrl,
-        notes: app.notes,
-        createdAt: app.createdAt,
-      }));
+      };
     } catch (error) {
       throw new InternalServerErrorException(error.message);
     }
@@ -241,18 +203,12 @@ export class ApplicationService {
   ): Promise<{ message: string }> {
     try {
       const application = await this.applicationRepo.findOne({ where: { id } });
-
-      if (!application) {
-        throw new NotFoundException("Ariza topilmadi");
-      }
+      if (!application) throw new NotFoundException("Ariza topilmadi");
 
       application.status = status;
-      if (notes) {
-        application.notes = notes;
-      }
+      if (notes) application.notes = notes;
 
       await this.applicationRepo.save(application);
-
       return { message: `Ariza statusi ${status} ga o'zgartirildi` };
     } catch (error) {
       if (error instanceof NotFoundException) throw error;
@@ -260,23 +216,12 @@ export class ApplicationService {
     }
   }
 
-  private async mapToResponseDto(
-    application: any,
-  ): Promise<ApplicationResponseDto> {
-    // Agar company yuklanmagan bo'lsa, qayta yuklash
-    if (!application.job.company && application.job.id) {
-      const jobWithCompany = await this.jobRepo.findOne({
-        where: { id: application.job.id },
-        relations: ["company"],
-      });
-      application.job.company = jobWithCompany?.company;
-    }
-
+  private mapToResponseDto(application: any, job: any): ApplicationResponseDto {
     return {
       id: application.id,
-      jobId: application.job.id,
-      jobTitle: application.job.title,
-      companyName: application.job.company?.name || "Noma'lum",
+      jobId: job.id,
+      jobTitle: job.title,
+      companyName: job.company?.name || "Noma'lum",
       status: application.status,
       coverLetter: application.coverLetter,
       cvUrl: application.cvUrl,

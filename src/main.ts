@@ -59,8 +59,8 @@ async function bootstrap() {
 });
 
   await app.listen(PORT, () => {
-    console.log("Server is running at : http://localhost:4001");
-    console.log("Documantation link : http://localhost:4001/api");
+    console.log(`Server is running at: http://localhost:${PORT}`);
+    console.log(`Documentation: http://localhost:${PORT}/api`);
   });
 }
 bootstrap();

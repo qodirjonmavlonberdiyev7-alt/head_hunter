@@ -19,11 +19,12 @@ export class CreateApplicationDto {
   @Length(20, 1000, { message: "Murojaat xati 20 dan 1000 belgigacha bo'lishi kerak" })
   coverLetter?: string;
 
-  @ApiProperty({ 
-    example: "https://my-storage.com/cv/my-resume.pdf", 
-    description: "CV fayl manzili (URL)" 
+  @ApiProperty({
+    example: "https://my-storage.com/cv/my-resume.pdf",
+    description: "CV fayl manzili (URL)",
+    required: false
   })
+  @IsOptional()
   @IsUrl({}, { message: "CV manzili to'g'ri URL bo'lishi kerak" })
-  @IsNotEmpty()
-  cvUrl: string;
+  cvUrl?: string;
 }

@@ -1,15 +1,17 @@
-import { 
-  Controller, 
-  Get, 
-  Post, 
-  Body, 
-  Patch, 
-  Param, 
-  Delete, 
-  UseGuards, 
-  ParseIntPipe, 
-  HttpCode
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  ParseIntPipe,
+  HttpCode,
+  Query,
 } from '@nestjs/common';
+import { PaginationDto } from 'src/shared/utils/pagination';
 import { CompaniesService } from './companies.service';
 import { CreateCompanyDto } from './dto/create-company.dto';
 import { UpdateCompanyDto } from './dto/update-company.dto';
@@ -41,9 +43,9 @@ export class CompaniesController {
   @UseGuards(AuthGuard, RolesGuard)
   @HttpCode(200)
   @Get("get_all_companies")
-  @ApiOperation({ summary: 'Barcha kompaniyalar roʻyxatini olish' })
-  findAll() {
-    return this.companiesService.findAll();
+  @ApiOperation({ summary: 'Barcha kompaniyalar roʻyxatini olish (pagination bilan)' })
+  findAll(@Query() paginationDto: PaginationDto) {
+    return this.companiesService.findAll(paginationDto);
   }
 
   @Roles(UserRole.ADMIN, UserRole.SUPERADMIN, UserRole.USER) 
